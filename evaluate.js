@@ -15,12 +15,12 @@ const calculator = (type, x, y) => {
     case "multiply":
       return x * y;
     case "divide":
-      if (y === 0) throw "MathError";
+      if (y === 0) throw new Error("MathError");
       return x / y;
     case "exponent":
       return x ** y;
     case "factorial":
-      if (x < 0 || y < 0) throw "MathError";
+      if (x < 0 || y < 0) throw new Error("MathError");
       return factorial(x || y);
     case "negative":
       return -1 * (x || y);
@@ -38,7 +38,8 @@ const calculator = (type, x, y) => {
 };
 
 const evaluate = (node) => {
-  if (node.type === "function" || node.type === "operator")
-    return calculator(node.text, node.leftChild, node.rightChild);
+  const { type, text, leftChild, rightChild } = node;
+  if (type === "function" || type === "operator")
+    return calculator(text, leftChild, rightChild);
   return parseFloat(node.node);
 };

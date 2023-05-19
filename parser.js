@@ -44,6 +44,11 @@ let operatorList = {
     text: "exponent",
     precedence: 5,
   },
+  "√": {
+    type: "function",
+    text: "sqrt",
+    precedence: 5,
+  },
   "!": {
     type: "function",
     text: "factorial",
@@ -64,11 +69,6 @@ let operatorList = {
     text: "tan",
     precedence: 7,
   },
-  "√": {
-    type: "function",
-    text: "sqrt",
-    precedence: 5,
-  },
 };
 
 function Node(x) {
@@ -87,16 +87,16 @@ const parse = (expr) => {
     nums = 0;
 
   while (expr) {
-    let match = expr.match(/^[\d.]+/) || expr.match(/^[a-z]+/);
+    const match = expr.match(/^[\d.]+/) || expr.match(/^[a-z]+/);
 
     if (match) {
       if (isNaN(match[0])) {
-        if (match[0].includes(".")) throw "SyntaxError";
+        if (match[0].includes(".")) throw new Error("SyntaxError");
         nodes.push(new Node(match[0]));
         expr = expr.replace(/^[a-z]+/, "");
       } else {
-        if (prev && prev === ")") {
-          throw "SyntaxError";
+        if (prev === ")") {
+          throw new Error("SyntaxError");
         }
 
         nodes.push(new Node(match[0]));
@@ -109,23 +109,27 @@ const parse = (expr) => {
     } else {
       let char = expr.charAt(0);
 
-      if (prev && !isNaN(prev) && "(√sincostan".includes(char)) {
+      if (
+        prev &&
+        !isNaN(prev) &&
+        ["(", "√", "sin", "cos", "tan"].includes(char)
+      ) {
         nodes.push(new Node("*"));
       }
 
-      if (prev && prev === ")" && "√sincostan".includes(char)) {
+      if (prev === ")" && ["√", "sin", "cos", "tan"].includes(char)) {
         nodes.push(new Node("*"));
-      } else if (prev && prev === ")" && char === "(") {
+      } else if (prev === ")" && char === "(") {
         nodes.push(new Node("*"));
       }
 
-      if ("+-*/".includes(prev) && "*/".includes(char)) {
-        throw "SyntaxError";
+      if (["+", "-", "*", "/"].includes(prev) && ["*", "/"].includes(char)) {
+        throw new Error("SyntaxError");
       }
 
-      if (char === "-" && !"()".includes(prev) && isNaN(prev)) {
+      if (char === "-" && !["(", ")"].includes(prev) && isNaN(prev)) {
         nodes.push(new Node("ve"));
-      } else if (char === "+" && !"()".includes(prev) && isNaN(prev)) {
+      } else if (char === "+" && !["(", ")"].includes(prev) && isNaN(prev)) {
         nodes.push(new Node("pl"));
       } else {
         nodes.push(new Node(char));
@@ -136,7 +140,7 @@ const parse = (expr) => {
     }
   }
 
-  if (nums === 0) throw "SyntaxError";
+  if (nums === 0) throw new Error("SyntaxError");
 
   console.log(nodes);
 
@@ -160,7 +164,7 @@ const createTree = (nodes) => {
 };
 
 const insertToTree = (currentNode, newNode) => {
-  let condition =
+  const condition =
     newNode.node === "^" || newNode.node === "√"
       ? newNode.precedence < currentNode.precedence
       : newNode.precedence <= currentNode.precedence;
@@ -190,7 +194,7 @@ const insertToTree = (currentNode, newNode) => {
 };
 
 const deleteNode = (currentNode) => {
-  let openingParen = climbTree(currentNode);
+  const openingParen = climbTree(currentNode);
   openingParen.rightChild.parent = openingParen.parent;
   openingParen.parent.rightChild = openingParen.rightChild;
   return openingParen.parent;
